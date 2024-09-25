@@ -1,0 +1,118 @@
+import random
+import string
+
+def generate_random_text_pages():
+    """
+    Generates an infinite number of books, each with 410 pages of random text.
+
+    Each page has 40 lines, each line contains 80 random letters from the English alphabet,
+    and ends with punctuation (mostly periods, but occasionally other punctuation).
+    """
+
+    alphabet = string.ascii_lowercase[:24]
+    punctuation = [".", ".", ".", ".", ".", ".", ".", ".", ".", ".",
+                   ",", "!", "?"]
+
+    while True:
+        title_length = random.randint(5, 10)
+        title = "".join(random.choices(alphabet, k=title_length))
+
+        pages = []
+        for _ in range(410):
+            line = "".join(random.choices(alphabet, k=80))
+            ending = random.choice(punctuation)
+            pages.append(line + ending)
+
+        yield {"title": title, "pages": pages}
+
+def view_sample_slice(books, start_page=0, end_page=5):
+    """
+    Displays a slice of the generated books with their titles.
+
+    Args:
+        books: The list of generated books (title and pages).
+        start_page: The starting page index (inclusive).
+        end_page: The ending page index (exclusive).
+    """
+
+    for book_num in range(start_page, end_page):
+        if 0 <= book_num < len(books):
+            book = books[book_num]
+            print(f"Book {book_num + 1}: {book['title']}\n")
+            for line in book['pages']:
+                print(line)
+            print("\n")
+        else:
+            print(f"Book {book_num + 1} is out of range.\n")
+
+def search_string(books, search_term):
+    """
+    Searches for a given string in the generated books and prints the results.
+
+    Args:
+        books: The list of generated books (title and pages).
+        search_term: The string to search for.
+    """
+
+    found = False
+    for book_num, book in enumerate(books):
+        for page_num, page in enumerate(book['pages']):
+            if search_term in page:
+                print(f"Found '{search_term}' in:")
+                print(f"  Book {book_num + 1}: {book['title']}")
+                print(f"  Page {page_num + 1}:")
+                print(f"    {page}") 
+                found = True
+
+    if not found:
+        print(f"The string '{search_term}' was not found in any of the books.")
+
+if __name__ == "__main__":
+    books_generator = generate_random_text_pages()
+
+    while True:
+        command = input("Enter a command (view sample, search, exit): ")
+
+        if command.lower() == "view sample":
+            try:
+                sample_type = input("Enter sample type (range, random): ").lower()
+                if sample_type == "range":
+                    start_page = int(input("Enter start book (default 0): ")) - 1
+                    end_page = int(input("Enter end book (default 5): "))
+
+                    for book_num in range(start_page, end_page):
+                        try:
+                            book = next(books_generator)
+                            view_sample_slice([book], 0, 1) 
+                        except StopIteration:
+                            print("Reached the end of the library.")
+                            break
+
+                elif sample_type == "random":
+                    num_samples = int(input("Enter number of random samples: "))
+                    for _ in range(num_samples):
+                        book = next(books_generator)
+                        random_page = random.choice(book['pages'])
+                        print(f"Random sample from Book: {book['title']}")
+                        print(random_page)
+                        print("\n")
+
+                else:
+                    print("Invalid sample type. Please enter 'range' or 'random'.")
+
+            except ValueError:
+                print("Invalid input. Please enter integers for book numbers and sample count.")
+
+        elif command.lower() == "search":
+            search_term = input("Enter the string to search for: ")
+
+            max_books_to_search = 1000
+            for _ in range(max_books_to_search):
+                book = next(books_generator)
+                search_string([book], search_term)
+
+        elif command.lower() == "exit":
+            break
+
+        else:
+            print("Invalid command.")
